@@ -86,7 +86,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedStock, setSelectedStock] = useState(null);
-  const API_URL = 'https://865f1e634da5.ngrok-free.app/analyze';
+  const API_URL = 'https://stock-rater-backend-api.onrender.com/analyze';
 
   const handleAnalyze = async (e) => { e.preventDefault(); const tickerList = tickers.split(',').map(t => t.trim().toUpperCase()).filter(Boolean); if (!tickerList.length) return; setLoading(true); setError(''); setResults([]); try { const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tickers: tickerList }) }); if (!response.ok) throw new Error(`Network error: ${response.statusText}`); const data = await response.json(); if (data.error) throw new Error(`Backend error: ${data.error}`); setResults(data.results); } catch (err) { setError(err.message); } finally { setLoading(false); } };
   
