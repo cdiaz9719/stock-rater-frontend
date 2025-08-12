@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import './index.css';
 import { PieChart } from 'react-minimal-pie-chart';
-import Chart from 'react-apexcharts'; // <-- NEW IMPORT FOR CHARTS
+import Chart from 'react-apexcharts';
 
-// STYLES (with new additions for charts)
+// STYLES
 const styles = {
     container: { width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 auto', padding: '20px' },
     header: { fontSize: '2.5rem', fontWeight: '700', color: 'var(--text-primary)', textShadow: '0 0 15px var(--accent-color-translucent)', marginBottom: '20px', textAlign: 'center' },
@@ -28,6 +28,7 @@ const styles = {
     panelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', marginBottom: '15px' },
     panelTitle: { color: 'var(--text-primary)', margin: 0, fontSize: '1.25rem', fontWeight: '600' },
     panelScore: { fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-color)' },
+    pieChartLabel: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', color: 'var(--text-primary)', lineHeight: '1.2' },
     cycleBoxContainer: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '10px' },
     cycleBox: { border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px', backgroundColor: '#0D1117' },
     cycleBoxActive: { backgroundColor: 'var(--accent-color)', borderColor: 'var(--accent-color)' },
@@ -42,15 +43,17 @@ const styles = {
     verdictPillIcon: { width: '16px', height: '16px' },
     momentumBadge: { padding: '4px 12px', borderRadius: '12px', fontWeight: '700', fontSize: '1rem', marginLeft: '10px', backgroundColor: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', border: '1px solid #6d28d9' },
     momentumPill: { backgroundColor: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' },
-    // --- NEW STYLES FOR CHARTS ---
-    sparklineContainer: { marginTop: '15px', marginBottom: '5px' },
-    chartPanel: { backgroundColor: 'var(--panel-background)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' },
+    priceRangeContainer: { position: 'relative', width: '100%', padding: '10px 0 0 0' },
+    priceRangeBar: { width: '100%', height: '8px', background: 'linear-gradient(90deg, #F85149, #DD6B20, #2EFEB4, #38A169)', borderRadius: '4px' },
+    priceRangeMarker: { position: 'absolute', top: '50%', transform: 'translateY(-50%) translateX(-50%)', width: '16px', height: '16px', backgroundColor: 'var(--accent-color)', borderRadius: '50%', border: '2px solid #0D1117' },
+    priceRangeLabels: { display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.8rem' },
 };
 const keyframes = `@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
 const styleSheet = document.createElement("style");
 styleSheet.innerText = keyframes;
 document.head.appendChild(styleSheet);
 
+// --- UTILITY FUNCTIONS ---
 const formatCurrency = (val) => { if (val == null) return 'N/A'; if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`; if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`; return `$${val.toFixed(2)}`; };
 const formatNum = (val, dec = 2) => val != null ? val.toFixed(dec) : 'N/A';
 const formatBigNum = (val) => val != null ? Math.round(val).toLocaleString() : 'N/A';
@@ -59,37 +62,256 @@ const formatSimpleCurrency = (val) => val != null ? `$${val.toFixed(2)}` : 'N/A'
 const getVerdictStyle = (verdict = '') => { const lowerVerdict = verdict.toLowerCase(); if (lowerVerdict.includes('bullish')) return { color: '#0D1117', backgroundColor: 'var(--accent-color)' }; if (lowerVerdict.includes('bearish')) return { color: '#0D1117', backgroundColor: 'var(--danger-color)' }; return { color: 'var(--text-primary)', backgroundColor: 'var(--border-color)' }; };
 const getScoreBarColor = (score) => { if (score > 0.65) return 'var(--accent-color)'; if (score > 0.45) return '#E8D44D'; return '#DD6B20'; };
 
-// --- NEW CHART COMPONENTS ---
-const SparklineChart = ({ data, isUp }) => {
-    const options = { chart: { type: 'line', sparkline: { enabled: true }, animations: { enabled: false } }, stroke: { curve: 'smooth', width: 2 }, colors: [isUp ? 'var(--accent-color)' : 'var(--danger-color)'], tooltip: { enabled: false } };
-    const series = [{ name: 'Price', data: data }];
-    return <div style={styles.sparklineContainer}><Chart options={options} series={series} type="line" height={40} /></div>;
-};
+// --- PANEL COMPONENTS (REBUILT & NEW) ---
 
-const PriceChartPanel = ({ stock }) => {
+// 3. New 5-Day Price Chart: Clean, square chart with no labels, price on hover.
+const PriceTrendPanel = ({ stock }) => {
     const details = stock?.['Technicals Details'] ?? {};
-    const priceData = details.price_history || [];
-    const volumeData = details.volume_history || [];
-    const priceSeries = [{ name: 'Price', data: priceData }];
-    const volumeSeries = [{ name: 'Volume', data: volumeData }];
-    const priceOptions = { chart: { id: 'price-chart', group: 'stock-charts', toolbar: { show: false }, animations: { enabled: false } }, xaxis: { type: 'datetime', labels: { style: { colors: 'var(--text-secondary)' } } }, yaxis: { labels: { formatter: (val) => `$${val.toFixed(2)}`, style: { colors: 'var(--text-secondary)' } } }, colors: ['var(--accent-color)'], stroke: { width: 2 }, tooltip: { theme: 'dark', x: { format: 'dd MMM yyyy' } }, grid: { borderColor: 'var(--border-color)', strokeDashArray: 4 } };
-    const volumeOptions = { chart: { id: 'volume-chart', group: 'stock-charts', toolbar: { show: false }, animations: { enabled: false } }, xaxis: { type: 'datetime', labels: { show: false } }, yaxis: { labels: { show: false } }, colors: ['#444'], tooltip: { theme: 'dark', x: { format: 'dd MMM yyyy' } }, grid: { show: false }, dataLabels: { enabled: false } };
-    return (<div style={styles.chartPanel}><Chart options={priceOptions} series={priceSeries} type="area" height={250} /><Chart options={volumeOptions} series={volumeSeries} type="bar" height={80} /></div>);
+    const priceData = (details.price_history || []).slice(-6); // Last 6 points for 5-day trend
+    const isUp = priceData.length > 1 ? priceData[priceData.length - 1][1] >= priceData[0][1] : true;
+    const series = [{ name: 'Price', data: priceData }];
+    const options = {
+        chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 3 },
+        colors: [isUp ? 'var(--accent-color)' : 'var(--danger-color)'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.1, stops: [0, 100] }},
+        tooltip: { theme: 'dark', style: { fontSize: '12px' }, x: { format: 'ddd, MMM dd' }, y: { formatter: (val) => `$${val.toFixed(2)}` }},
+        grid: { show: false },
+        xaxis: { type: 'datetime', labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false }},
+        yaxis: { labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false }},
+    };
+    // Panel has no header for a clean, chart-only look
+    return (<div style={{...styles.detailPanel, padding: '0'}}><Chart options={options} series={series} type="area" height={320} /></div>);
 };
 
-// --- EXISTING PANEL COMPONENTS ---
+// 1. Balance Sheet: Compact pie chart left, three color-coded rows right.
+const BalanceSheetPanel = ({ stock }) => {
+    const details = stock?.['Financials Details'] ?? {};
+    const totalAssets = details.totalAssets || 0;
+    const totalDebt = details.totalDebt || 0;
+    const totalEquity = details.stockholderEquity || 0;
+
+    const debtPct = totalAssets > 0 ? totalDebt / totalAssets : 0;
+    const equityPct = totalAssets > 0 ? totalEquity / totalAssets : 0;
+    
+    // Pie data represents how assets are financed
+    const chartData = [
+        { title: 'Equity', value: equityPct * 100, color: 'var(--accent-color)' },
+        { title: 'Debt', value: debtPct * 100, color: 'var(--danger-color)' },
+    ];
+    
+    const LegendRow = ({ label, percentage, color }) => (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '3px' }}></span>
+                <span style={{color: 'var(--text-secondary)'}}>{label}</span>
+            </div>
+            <strong style={{color: 'var(--text-primary)'}}>{percentage}</strong>
+        </div>
+    );
+
+    return (
+        <div style={styles.detailPanel}>
+            <div style={styles.panelHeader}><h3 style={styles.panelTitle}>Balance Sheet</h3></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '25px', padding: '15px 5px' }}>
+                <div style={{ position: 'relative', width: '120px', height: '120px', flexShrink: 0 }}>
+                    <PieChart data={chartData} lineWidth={25} startAngle={-90} background="#161b22" />
+                    <div style={styles.pieChartLabel}>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>Assets</div>
+                    </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                     <LegendRow label="Total Assets" percentage={formatCurrency(totalAssets)} color="var(--text-primary)" />
+                     <LegendRow label="Total Equity" percentage={formatPercent(equityPct, 1)} color="var(--accent-color)" />
+                     <LegendRow label="Total Debt" percentage={formatPercent(debtPct, 1)} color="var(--danger-color)" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 2. Technicals Panel: 52-week slider at top, followed by six metrics.
+const TechnicalsPanel = ({ stock }) => {
+    const score = stock?.['Technicals Score'] ?? 0;
+    const details = stock?.['Technicals Details'] ?? {};
+    let markerPosition = 50;
+    if (details.fiftyTwoWeekHigh != null && details.fiftyTwoWeekLow != null && details.current_price != null) {
+        const currentPrice = Math.max(details.fiftyTwoWeekLow, Math.min(details.fiftyTwoWeekHigh, details.current_price));
+        const range = details.fiftyTwoWeekHigh - details.fiftyTwoWeekLow;
+        markerPosition = range > 0 ? ((currentPrice - details.fiftyTwoWeekLow) / range) * 100 : 50;
+    }
+    const macdIsBullish = details.macd_line > details.signal_line;
+
+    const MetricRow = ({ label, value, color }) => (
+        <div style={{...styles.detailRow, padding: '10px 0', borderBottom: '1px solid #161b2280' }}>
+            <span style={{color: 'var(--text-secondary)'}}>{label}</span>
+            <strong style={{color: color || 'var(--text-primary)'}}>{value}</strong>
+        </div>
+    );
+    
+    return (
+        <div style={styles.detailPanel}>
+            <div style={styles.panelHeader}>
+                <h3 style={styles.panelTitle}>Technicals</h3>
+                <span style={styles.panelScore}>{Math.round(score * 100)}</span>
+            </div>
+            
+            <div style={{ padding: '10px 0 15px 0' }}>
+                <div style={styles.priceRangeLabels}>
+                    <span>{formatSimpleCurrency(details.fiftyTwoWeekLow)}</span>
+                    <span style={{color: 'var(--text-primary)', fontWeight: 600}}>52-Week Range</span>
+                    <span>{formatSimpleCurrency(details.fiftyTwoWeekHigh)}</span>
+                </div>
+                <div style={styles.priceRangeContainer}>
+                    <div style={styles.priceRangeBar}></div>
+                    <div style={{...styles.priceRangeMarker, left: `${markerPosition}%`}}></div>
+                </div>
+                 <div style={{textAlign: `center`, color: 'var(--accent-color)', fontWeight: 600, fontSize: '0.9rem', marginTop: '10px'}}>
+                    Current: {formatSimpleCurrency(details.current_price)}
+                </div>
+            </div>
+
+            <MetricRow label="50-Day Moving Avg." value={formatSimpleCurrency(details.ma50)} />
+            <MetricRow label="200-Day Moving Avg." value={formatSimpleCurrency(details.ma200)} />
+            <MetricRow label="RSI (14)" value={formatNum(details.rsi, 2)} />
+            <MetricRow label="MACD Signal" value={macdIsBullish ? 'Bullish' : 'Bearish'} color={macdIsBuliish ? 'var(--accent-color)' : 'var(--danger-color)'} />
+            <MetricRow label="ATR (Volatility)" value={formatSimpleCurrency(details.atr)} />
+            <MetricRow label="Avg. Volume (30D)" value={formatBigNum(details.avg_volume_30d)} />
+        </div>
+    );
+};
+
+// 6. Seasonality: Compact, text-based design.
+const SeasonalityPanel = ({ stock }) => {
+    const details = stock?.['Seasonality Details'] ?? {};
+    const verdict = details.verdict || 'Neutral';
+    const reason = details.reason || 'No data available.';
+    const verdictColor = verdict.toLowerCase().includes('bullish') ? 'var(--accent-color)' : verdict.toLowerCase().includes('bearish') ? 'var(--danger-color)' : 'var(--text-secondary)';
+
+    return (
+        <div style={styles.detailPanel}>
+            <div style={styles.panelHeader}>
+                <h3 style={styles.panelTitle}>Seasonality</h3>
+                <span style={{ color: verdictColor, fontSize: '1.1rem', fontWeight: 700 }}>{verdict}</span>
+            </div>
+            <div style={{ padding: '5px 0' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '0 0 15px 0', lineHeight: 1.5 }}>
+                    {reason}
+                </p>
+                <div style={styles.detailRow}><span style={styles.scoreLabel}>Historical Win Rate</span><strong>{formatPercent(details.win_rate, 0) ?? 'N/A'}</strong></div>
+                <div style={{...styles.detailRow, borderBottom: 'none'}}><span style={styles.scoreLabel}>Avg. Monthly Return</span><strong>{formatPercent(details.avg_monthly_return) ?? 'N/A'}</strong></div>
+            </div>
+        </div>
+    );
+};
+
+
+// --- UNCHANGED ORIGINAL PANELS ---
 const MacroPanel = ({ stock }) => { const details = stock?.['Macro Details'] ?? {}; const score = stock?.['Macro Score'] ?? 0; const sectorClassification = details.sector_classification || 'N/A'; const currentMacroState = details.current_macro_state || 'N/A'; const cycleData = [ { title: 'Expansion', types: ['Growth', 'Cyclical Growth', 'Cyclical'] }, { title: 'Peak', types: ['Defensive Growth', 'Diversified'] }, { title: 'Contraction', types: ['Defensive', 'Utilities', 'Consumer Defensive'] }, { title: 'Trough', types: ['Cyclical Value', 'Financial Services'] } ]; const idealCycleStage = cycleData.find(c => c.types.includes(sectorClassification))?.title || 'N/A'; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Macro Environment Fit</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><div style={styles.cycleBoxContainer}>{cycleData.map(box => { const isIdealStage = box.title === idealCycleStage; const isCurrentStage = box.title === currentMacroState; const boxStyle = { ...styles.cycleBox, ...(isCurrentStage && {...styles.cycleBox, border:'2px solid var(--accent-color)'}), ...(isIdealStage && styles.cycleBoxActive) }; return ( <div key={box.title} style={boxStyle}><span style={{...styles.cycleBoxTitle, ...(isIdealStage && styles.cycleBoxTitleActive)}}>{box.title}{isCurrentStage && !isIdealStage && <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}> (Current)</span>}</span><ul style={styles.sectorTypeList}>{box.types.map(type => ( <li key={type} style={{...(type === sectorClassification && !isIdealStage && styles.sectorTypeHighlight), ...(isIdealStage && {color:'#0d1117'})}}>{type}</li> ))}</ul></div> ); })}</div><div style={styles.detailRow}><span>Ideal Cycle Stage</span><strong>{idealCycleStage}</strong></div><div style={styles.detailRow}><span>{details.sector} Sector Classification</span><strong style={{color: 'var(--accent-color)'}}>{sectorClassification}</strong></div></div> );};
-const BalanceSheetPanel = ({ stock }) => { const details = stock?.['Financials Details'] ?? {}; const totalAssets = details.totalAssets || 0; const totalDebt = details.totalDebt || 0; const totalEquity = details.stockholderEquity || 0; const debtPct = totalAssets > 0 ? totalDebt / totalAssets : 0; const equityPct = totalAssets > 0 ? totalEquity / totalAssets : 0; const chartData = [ { title: 'Equity', value: equityPct * 100, color: 'var(--accent-color)' }, { title: 'Debt', value: debtPct * 100, color: 'var(--danger-color)' } ]; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Balance Sheet Visualization</h3></div><div style={styles.balanceSheetContainer}><div style={styles.pieChartContainer}><PieChart data={chartData} lineWidth={20} startAngle={-90} background="#161b22" /><div style={styles.pieChartLabel}><div style={{fontSize:'1rem', fontWeight:'bold'}}>Assets</div><div style={{fontSize:'1.2rem', color:'var(--accent-color)'}}>{formatCurrency(totalAssets)}</div></div></div><div style={{flex: 1}}><div style={styles.detailRow}><span>Total Assets</span><strong style={{color: 'var(--accent-color)'}}>{formatCurrency(totalAssets)} (100%)</strong></div><div style={styles.detailRow}><span>Total Liabilities (Debt)</span><strong style={{color: 'var(--danger-color)'}}>{formatCurrency(totalDebt)} ({formatPercent(debtPct)})</strong></div><div style={styles.detailRow}><span>Total Equity</span><strong style={{color: 'var(--accent-color)'}}>{formatCurrency(totalEquity)} ({formatPercent(equityPct)})</strong></div></div></div></div> );};
 const FundamentalsPanel = ({ stock }) => { const score = stock?.['Financials Score'] ?? 0; const details = stock?.['Financials Details'] ?? {}; const FundamentaMetric = ({ label, value, formatter = (v) => v }) => (<div style={styles.detailRow}><span style={{color: 'var(--text-secondary)'}}>{label}</span><strong style={{color: 'var(--text-primary)'}}>{formatter(value)}</strong></div>); return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Fundamental Analysis</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><FundamentaMetric label="YoY Revenue Growth" value={details.revenue_growth_yoy} formatter={formatPercent} /><FundamentaMetric label="P/E Ratio" value={details.pe_ratio} formatter={formatNum} /><FundamentaMetric label="P/B Ratio" value={details.priceToBook} formatter={formatNum} /><FundamentaMetric label="Debt to Equity" value={details.de_ratio} formatter={formatNum} /><FundamentaMetric label="Return on Equity" value={details.roe} formatter={formatPercent} /><FundamentaMetric label="Profit Margin" value={details.profit_margin} formatter={formatPercent} /></div> );};
-const TechnicalsPanel = ({ stock }) => { const score = stock?.['Technicals Score'] ?? 0; const details = stock?.['Technicals Details'] ?? {}; let markerPosition = 50; if (details.fiftyTwoWeekHigh != null && details.fiftyTwoWeekLow != null && details.current_price != null) { markerPosition = ((details.current_price - details.fiftyTwoWeekLow) / (details.fiftyTwoWeekHigh - details.fiftyTwoWeekLow)) * 100; } const macdIsBullish = details.macd_line > details.signal_line; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Technical Analysis</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><div style={styles.detailRow}><span>50-Day Moving Avg.</span><strong>{formatSimpleCurrency(details.ma50)}</strong></div><div style={styles.detailRow}><span>200-Day Moving Avg.</span><strong>{formatSimpleCurrency(details.ma200)}</strong></div><div style={styles.detailRow}><span>RSI (14)</span><strong>{formatNum(details.rsi, 2)}</strong></div><div style={styles.detailRow}><span>MACD Signal</span><strong style={macdIsBullish ? {color:'var(--accent-color)'} : {color:'var(--danger-color)'}}>{macdIsBullish ? `Bullish (${formatNum(details.macd_line, 2)} vs ${formatNum(details.signal_line, 2)})` : `Bearish (${formatNum(details.macd_line, 2)} vs ${formatNum(details.signal_line, 2)})`}</strong></div><div style={styles.detailRow}><span>ATR (Volatility)</span><strong>{formatSimpleCurrency(details.atr)}</strong></div><div style={styles.detailRow}><span>Avg. Volume (30D)</span><strong>{formatBigNum(details.avg_volume_30d)}</strong></div></div> );};
 const SentimentPanel = ({ stock }) => { const score = stock?.['Sentiment LLM Score'] ?? 0; const details = stock?.['Sentiment Details'] ?? {}; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Sentiment Analysis</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><div style={styles.detailRow}><span>Analyst Consensus</span><strong>{details.analyst_rating_text}</strong></div><div style={{padding: '10px 0'}}><span style={{fontWeight:600}}>AI Sentiment on Recent Headlines</span></div>{details.analyzed_articles?.length > 0 ? (details.analyzed_articles.map((article, i) => (<div key={i} style={{...styles.sentimentArticle, borderLeftColor: `hsl(${article.score*120}, 100%, 50%)`}}><span>{article.title}</span><p style={{fontSize:'0.8rem', color:'var(--text-secondary)', margin:'5px 0 0'}}>{article.justification} - <a href={article.url} target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)'}}>Read Full Article →</a></p></div>))) : <p>No news articles found.</p>}</div> );};
 const PerformanceAndStatsPanel = ({ stock }) => { const techDetails = stock?.['Technicals Details'] ?? {}; const finDetails = stock?.['Financials Details'] ?? {}; const formatPerf = (value) => { if (value == null) return <span style={{color: 'var(--text-secondary)'}}>N/A</span>; const percent = value * 100; const color = percent >= 0 ? 'var(--accent-color)' : 'var(--danger-color)'; return <span style={{ color, fontWeight: '600' }}>{percent.toFixed(1)}%</span>; }; return ( <div style={styles.detailPanel}> <div style={styles.panelHeader}><h3 style={styles.panelTitle}>Performance & Stats</h3></div> <div style={styles.detailRow}><span>Market Cap</span><strong>{formatCurrency(finDetails.marketCap)}</strong></div> <div style={{height:'10px'}}></div> <div style={styles.panelHeader}><h3 style={{...styles.panelTitle, fontSize:'1.1rem'}}>Trailing Performance</h3></div> <div style={styles.detailRow}><span>1-Week</span><strong>{formatPerf(techDetails.performance_1w)}</strong></div> <div style={styles.detailRow}><span>1-Month</span><strong>{formatPerf(techDetails.performance_1m)}</strong></div> <div style={styles.detailRow}><span>3-Month</span><strong>{formatPerf(techDetails.performance_3m)}</strong></div> <div style={styles.detailRow}><span>YTD</span><strong>{formatPerf(techDetails.performance_ytd)}</strong></div> <div style={styles.detailRow}><span>1-Year</span><strong>{formatPerf(techDetails.performance_1y)}</strong></div> <div style={styles.detailRow}><span>1-Yr vs S&P 500</span><strong>{formatPerf(techDetails.performance_vs_sp500_1y)}</strong></div> </div> );};
-const SeasonalityPanel = ({ stock }) => { const details = stock?.['Seasonality Details'] ?? {}; const verdict = details.verdict || 'Neutral'; const reason = details.reason || 'No data available.'; const verdictColor = getVerdictStyle(verdict).backgroundColor; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Monthly Seasonality Outlook</h3></div><div style={styles.verdictContainer}><svg style={{...styles.seasonalityIcon, color: verdictColor}} xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4V.5zM16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2zM8 7.993c0-.552.224-1.053.6-1.432.376-.38.88-.561 1.4-.561.52 0 1.024.181 1.4.561.376.379.6.88.6 1.432 0 .552-.224 1.053-.6 1.432-.376.38-.88-.561-1.4.561-.52 0-1.024-.181-1.4-.561A1.969 1.969 0 0 1 8 7.993z"/></svg><span style={{...styles.seasonalityVerdictText, color: verdictColor}}>{verdict}</span></div><p style={styles.seasonalityReason}>{reason}</p><div style={styles.detailRow}><span style={styles.scoreLabel}>Historical Win Rate</span><strong style={{fontWeight: '600'}}>{formatPercent(details.win_rate, 0) ?? 'N/A'}</strong></div><div style={styles.detailRow}><span style={styles.scoreLabel}>Avg. Monthly Return</span><strong style={{fontWeight: '600'}}>{formatPercent(details.avg_monthly_return) ?? 'N/A'}</strong></div></div> );};
 
-// --- CORE APP COMPONENTS (with charts integrated) ---
-const DetailedView = ({ stock, onBack }) => ( <div style={styles.container}> <button onClick={onBack} style={styles.backButton}>← Back to Results</button> <div style={{...styles.cardHeader, width: '100%'}}> <h1 style={styles.tickerSymbol}>{stock.Ticker} Full Breakdown</h1> <div style={{display: 'flex', alignItems: 'baseline'}}> <span style={styles.growthScore}>Growth Score: {formatPercent(stock['Growth Score'], 2)}</span> {stock['Momentum Details']?.bonus > 0 && ( <span style={styles.momentumBadge} title={stock['Momentum Details'].reason}> Momentum Bonus </span> )} <span style={{...styles.verdictBadge, ...getVerdictStyle(stock['Final Verdict'])}}>{stock['Final Verdict']}</span> </div> </div> <div className="detailed-grid"> <div className="left-column"> <MacroPanel stock={stock} /> <BalanceSheetPanel stock={stock} /> <FundamentalsPanel stock={stock} /> <SentimentPanel stock={stock} /> </div> <div className="right-column"> <PriceChartPanel stock={stock} /> <TechnicalsPanel stock={stock} /> <PerformanceAndStatsPanel stock={stock} /> <SeasonalityPanel stock={stock} /> </div> </div> </div> );
-const MainView = ({ onAnalyze, onTickersChange, tickers, loading, error, results, onSelectStock }) => ( <> <h1 style={styles.header}>Pocket Analyst</h1> <div style={styles.inputPanel}><form onSubmit={onAnalyze} style={styles.form}><input type="text" value={tickers} onChange={onTickersChange} placeholder="e.g., NVDA, MSFT, AAPL" style={styles.input} /><button type="submit" style={styles.button} disabled={loading}>Analyze</button></form></div> {loading && <div style={styles.loader}></div>} {error && <div style={styles.errorMessage}>{error}</div>} {results.length > 0 && <div style={styles.resultsContainer}>{results.map(result => (<ResultCard key={result.Ticker} data={result} onSelect={onSelectStock} />))}</div>} </> );
-const ResultCard = ({ data, onSelect }) => { const sentimentScore = ((data['Sentiment LLM Score'] || 0) + (data['Sentiment Analyst Score'] || 0) + (data['Sentiment Social Score'] || 0)) / 3; const scores = [ { label: 'Financials', value: data['Financials Score'] || 0 }, { label: 'Technicals', value: data['Technicals Score'] || 0 }, { label: 'Sentiment', value: sentimentScore }, { label: 'Macro', value: data['Macro Score'] || 0 } ]; const finalVerdict = data['Final Verdict'] || 'Neutral'; const seasonalityVerdict = data['Seasonality Details']?.verdict || 'Neutral'; const momentumBonus = data['Momentum Details']?.bonus || 0; const techDetails = data?.['Technicals Details'] ?? {}; const sparklineData = techDetails.sparkline || []; const isUp = sparklineData.length > 1 ? sparklineData[sparklineData.length - 1] > sparklineData[0] : true; const VerdictPill = ({ verdict, icon, customStyle = {} }) => { const style = getVerdictStyle(verdict); return ( <div style={{...styles.verdictPill, ...style, ...customStyle}}> {icon} <span>{verdict}</span> </div> ); }; return ( <div style={styles.card} onClick={() => onSelect(data)}> <div style={styles.cardHeader}> <span style={styles.tickerSymbol}>{data.Ticker}</span> <span style={styles.growthScore}>{formatPercent(data['Growth Score'], 2)}</span> </div> <div style={styles.verdictPillsContainer}> <VerdictPill verdict={finalVerdict} icon={<svg style={styles.verdictPillIcon} viewBox="0 0 16 16" fill="currentColor"><path d="M7.02.98a.5.5 0 0 1 .555.032l5.5 4.5a.5.5 0 0 1-.031.876l-3.235.808.808 3.235a.5.5 0 0 1-.876.032l-4.5-5.5a.5.5 0 0 1-.032-.555L6.18 2.82 2.946 1.185a.5.5 0 0 1 .032-.876l4-1a.5.5 0 0 1 .042 0zm1.56 5.34a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L10.293 9 8.58 7.293a.5.5 0 0 1 0-.708zM4.5 12.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/></svg>} /> <VerdictPill verdict={`Seasonality: ${seasonalityVerdict}`} icon={<svg style={styles.verdictPillIcon} viewBox="0 0 16 16" fill="currentColor"><path d="M4.684 11.523v-2.3h2.3v2.3h-2.3zm-1.15 0v-2.3h2.3v2.3h-2.3zm3.45 0v-2.3h2.3v2.3h-2.3zm-1.15-3.45v-2.3h2.3v2.3h-2.3zm-2.3 0v-2.3h2.3v2.3h-2.3zm3.45 0v-2.3h2.3v2.3h-2.3zm2.3 0v-2.3h2.3v2.3h-2.3zm-1.15 3.45v-2.3h2.3v2.3h-2.3zM15 2h-1V0h-2v2H4V0H2v2H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zm-1 13H2V5h12v10z"/></svg>} /> {momentumBonus > 0 && ( <VerdictPill verdict="Momentum" icon={<svg style={styles.verdictPillIcon} viewBox="0 0 16 16" fill="currentColor"><path d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/></svg>} customStyle={styles.momentumPill} /> )} </div> {scores.map(s => ( <div key={s.label} style={styles.scoreRow}> <span style={styles.scoreLabel}>{s.label}</span> <div style={styles.scoreBarContainer}> <div style={{...styles.scoreBarFill, width: `${s.value * 100}%`, backgroundColor: getScoreBarColor(s.value) }}></div> </div> <span style={styles.scoreValue}>{formatPercent(s.value, 2)}</span> </div> ))} {sparklineData.length > 0 && <SparklineChart data={sparklineData} isUp={isUp} />} </div> );};
+
+// --- CORE COMPONENTS ---
+
+// 4. Detailed View Layout: New panel order in the right column.
+// 7. Momentum Bonus: Badge in the header.
+const DetailedView = ({ stock, onBack }) => (
+    <div style={styles.container}>
+        <button onClick={onBack} style={styles.backButton}>← Back to Results</button>
+        <div style={{...styles.cardHeader, width: '100%'}}>
+            <h1 style={styles.tickerSymbol}>{stock.Ticker} Full Breakdown</h1>
+            <div style={{display: 'flex', alignItems: 'baseline'}}>
+                <span style={styles.growthScore}>Growth Score: {formatPercent(stock['Growth Score'], 2)}</span>
+                {stock['Momentum Details']?.bonus > 0 && (
+                    <span style={styles.momentumBadge} title={stock['Momentum Details'].reason}> Momentum Bonus </span>
+                )}
+                <span style={{...styles.verdictBadge, ...getVerdictStyle(stock['Final Verdict'])}}>{stock['Final Verdict']}</span>
+            </div>
+        </div>
+        <div className="detailed-grid">
+            <div className="left-column">
+                <MacroPanel stock={stock} />
+                <BalanceSheetPanel stock={stock} />
+                <FundamentalsPanel stock={stock} />
+                <SentimentPanel stock={stock} />
+            </div>
+            <div className="right-column">
+                <PriceTrendPanel stock={stock} />
+                <TechnicalsPanel stock={stock} />
+                <PerformanceAndStatsPanel stock={stock} />
+                <SeasonalityPanel stock={stock} />
+            </div>
+        </div>
+    </div>
+);
+
+// 5. Main Page: ResultCard is already clean.
+// 7. Momentum Bonus: "Momentum" pill on the main card.
+const ResultCard = ({ data, onSelect }) => {
+    const sentimentScore = ((data['Sentiment LLM Score'] || 0) + (data['Sentiment Analyst Score'] || 0) + (data['Sentiment Social Score'] || 0)) / 3;
+    const scores = [
+        { label: 'Financials', value: data['Financials Score'] || 0 },
+        { label: 'Technicals', value: data['Technicals Score'] || 0 },
+        { label: 'Sentiment', value: sentimentScore },
+        { label: 'Macro', value: data['Macro Score'] || 0 }
+    ];
+    const finalVerdict = data['Final Verdict'] || 'Neutral';
+    const seasonalityVerdict = data['Seasonality Details']?.verdict || 'Neutral';
+    const momentumBonus = data['Momentum Details']?.bonus || 0;
+
+    const VerdictPill = ({ verdict, icon, customStyle = {} }) => {
+        const style = getVerdictStyle(verdict);
+        return (
+            <div style={{...styles.verdictPill, ...style, ...customStyle}}>
+                {icon}
+                <span>{verdict}</span>
+            </div>
+        );
+    };
+
+    return (
+        <div style={styles.card} onClick={() => onSelect(data)}>
+            <div style={styles.cardHeader}>
+                <span style={styles.tickerSymbol}>{data.Ticker}</span>
+                <span style={styles.growthScore}>{formatPercent(data['Growth Score'], 2)}</span>
+            </div>
+            <div style={styles.verdictPillsContainer}>
+                <VerdictPill verdict={finalVerdict} />
+                <VerdictPill verdict={`Seasonality: ${seasonalityVerdict}`} />
+                {momentumBonus > 0 && (
+                    <VerdictPill verdict="Momentum" customStyle={styles.momentumPill} />
+                )}
+            </div>
+            {scores.map(s => (
+                <div key={s.label} style={styles.scoreRow}>
+                    <span style={styles.scoreLabel}>{s.label}</span>
+                    <div style={styles.scoreBarContainer}>
+                        <div style={{...styles.scoreBarFill, width: `${s.value * 100}%`, backgroundColor: getScoreBarColor(s.value) }}></div>
+                    </div>
+                    <span style={styles.scoreValue}>{formatPercent(s.value, 2)}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const MainView = ({ onAnalyze, onTickersChange, tickers, loading, error, results, onSelectStock }) => (
+    <>
+        <h1 style={styles.header}>AI Powered Pocket Analyst</h1>
+        <div style={styles.inputPanel}>
+            <form onSubmit={onAnalyze} style={styles.form}>
+                <input type="text" value={tickers} onChange={onTickersChange} placeholder="e.g., NVDA, MSFT, AAPL" style={styles.input} />
+                <button type="submit" style={styles.button} disabled={loading}>Analyze</button>
+            </form>
+        </div>
+        {loading && <div style={styles.loader}></div>}
+        {error && <div style={styles.errorMessage}>{error}</div>}
+        {results.length > 0 && <div style={styles.resultsContainer}>{results.map(result => (<ResultCard key={result.Ticker} data={result} onSelect={onSelectStock} />))}</div>}
+    </>
+);
 
 function App() {
   const [tickers, setTickers] = useState('');
@@ -99,9 +321,48 @@ function App() {
   const [selectedStock, setSelectedStock] = useState(null);
   const API_URL = 'https://stock-rater-backend-api.onrender.com/analyze';
 
-  const handleAnalyze = async (e) => { e.preventDefault(); const tickerList = tickers.split(',').map(t => t.trim().toUpperCase()).filter(Boolean); if (!tickerList.length) return; setLoading(true); setError(''); setResults([]); try { const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tickers: tickerList }) }); if (!response.ok) throw new Error(`Network error: ${response.statusText}`); const data = await response.json(); if (data.error) throw new Error(`Backend error: ${data.error}`); setResults(data.results); } catch (err) { setError(err.message); } finally { setLoading(false); } };
+  const handleAnalyze = async (e) => {
+    e.preventDefault();
+    const tickerList = tickers.split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
+    if (!tickerList.length) return;
+    setLoading(true);
+    setError('');
+    setResults([]);
+    setSelectedStock(null);
+    const analyzeTicker = async (ticker) => {
+      try {
+        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tickers: [ticker] }) });
+        if (!response.ok) throw new Error(`Network error for ${ticker}`);
+        const data = await response.json();
+        if (data.results && data.results.length > 0) { return data.results[0]; }
+        else { return { Ticker: ticker, Growth Score: 0, error: 'No results from API', Final Verdict: 'Error' }; }
+      } catch (err) {
+        console.error(`Failed to analyze ${ticker}:`, err);
+        return { Ticker: ticker, Growth Score: 0, error: err.message, Final Verdict: 'Error' };
+      }
+    };
+    const allResults = await Promise.all(tickerList.map(ticker => analyzeTicker(ticker)));
+    const sortedResults = allResults.sort((a, b) => (b['Growth Score'] || 0) - (a['Growth Score'] || 0));
+    setResults(sortedResults);
+    setLoading(false);
+  };
   
-  return ( <div style={styles.container}> {selectedStock ? <DetailedView stock={selectedStock} onBack={() => setSelectedStock(null)} /> : <MainView onAnalyze={handleAnalyze} onTickersChange={(e) => setTickers(e.target.value)} tickers={tickers} loading={loading} error={error} results={results} onSelectStock={setSelectedStock} /> } </div> );
+  return (
+    <div style={styles.container}>
+      {selectedStock ?
+        <DetailedView stock={selectedStock} onBack={() => setSelectedStock(null)} /> :
+        <MainView
+          onAnalyze={handleAnalyze}
+          onTickersChange={(e) => setTickers(e.target.value)}
+          tickers={tickers}
+          loading={loading}
+          error={error}
+          results={results}
+          onSelectStock={setSelectedStock}
+        />
+      }
+    </div>
+  );
 }
 
 export default App;
