@@ -1,15 +1,15 @@
-/* src/index.css - MOBILE FIRST - FINAL VERSION */
+/* src/index.css - FINAL VERSION with mobile dashboard */
 
 :root {
   --background-color: #0D1117; 
   --panel-background: #161B22; 
-  --border-color: #30363d; /* Corrected hex value for border-color */
+  --border-color: #30363d;
   --text-primary: #E6EDF3; 
   --text-secondary: #8B949E; 
   --accent-color: #2EFEB4;
   --accent-glow: rgba(46, 254, 180, 0.5); 
-  --danger-color: #F85149; 
-  --success-color: #2EFEB4; /* Corrected variable name */
+  --danger-color: #F85149;
+  --success-color: #2EFEB4;
 }
 
 body, html, #root { 
@@ -26,46 +26,47 @@ body, html, #root {
   display: flex; 
   flex-direction: column; 
   align-items: center; 
-  padding: 20px 15px 40px 15px; /* Added some padding for mobile */
-  box-sizing: border-box; /* Ensures padding is included in the element's total width and height */
+  padding: 20px 15px 40px 15px;
+  box-sizing: border-box;
 }
 
-/* --- MOBILE-FIRST BASE STYLES --- */
-
-/* Detailed view grid defaults to a single column for mobile */
-.detailed-grid { 
-  display: grid; 
-  grid-template-columns: 1fr; 
-  gap: 20px; 
-  width: 100%;
+/* Base layout defaults to a single column */
+.resultsContainer,
+.detailed-grid,
+.performance-outlook-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
 }
 
-.left-column, .right-column { 
+.left-column, 
+.right-column { 
   display: flex; 
   flex-direction: column; 
   gap: 20px;
 }
 
-/* Tab container styles are universal */
+/* Tab container styles for mobile */
 .tab-container {
   width: 100%;
   display: flex;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 20px;
-  overflow-x: auto; /* Allows scrolling on very small devices */
+  overflow-x: auto; 
 }
 
 .tab-button {
-  padding: 12px 20px; /* Adjusted padding slightly for mobile */
+  padding: 12px 20px;
   cursor: pointer;
   background-color: transparent;
   border: none;
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 0.95rem; /* Adjusted font size slightly for mobile */
+  font-size: 0.95rem;
   border-bottom: 3px solid transparent;
   transition: all 0.2s ease-in-out;
-  white-space: nowrap; /* Prevents button text from wrapping */
+  white-space: nowrap;
 }
 
 .tab-button-active {
@@ -80,12 +81,86 @@ body, html, #root {
   white-space: nowrap;
 }
 
-/* Performance outlook grid defaults to a single column */
-.performance-outlook-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+
+/* --- DETAILED VIEW MOBILE DASHBOARD STYLES --- */
+
+.detailed-view-header {
   width: 100%;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* Logic to hide/show layouts */
+@media (max-width: 768px) {
+  .desktop-only { display: none; }
+}
+
+@media (min-width: 769px) {
+  .mobile-only { display: none; }
+}
+
+/* Styles for the new category grid on mobile */
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.category-button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 120px;
+  background-color: var(--panel-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.category-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.category-button-score {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.mobile-panel-view {
+  width: 100%;
+}
+
+.mobile-back-button {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  width: 100%;
+  display: block; /* Make it a block to take up full width */
+  text-align: center;
 }
 
 
@@ -98,24 +173,23 @@ body, html, #root {
     padding: 40px; /* Restore original larger padding for desktop */
   }
 
-  /* Override .detailed-grid to use two columns on larger screens */
+  /* Override grids to use multi-column layouts */
   .detailed-grid {
     grid-template-columns: 2fr 1fr;
   }
   
-  /* Override the main page's result list layout for desktop */
   .resultsContainer {
     grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   }
 
-  /* Override the performance outlook grid for desktop */
   .performance-outlook-grid {
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   }
   
+  /* Restore tab button styles for desktop */
   .tab-button, .tab-button-active {
-    padding: 12px 25px; /* Restore original padding */
-    font-size: 1rem; /* Restore original font size */
+    padding: 12px 25px;
+    font-size: 1rem;
   }
 
 }

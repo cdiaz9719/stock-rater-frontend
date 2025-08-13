@@ -3,7 +3,7 @@ import './index.css';
 import { PieChart } from 'react-minimal-pie-chart';
 import Chart from 'react-apexcharts';
 
-// STYLES - Includes all necessary styles for the final layout
+// STYLES - FROM YOUR FILE
 const styles = {
     container: { width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 auto', padding: '20px' },
     header: { fontSize: '2.5rem', fontWeight: '700', color: 'var(--text-primary)', textShadow: '0 0 15px var(--accent-color-translucent)', marginBottom: '20px', textAlign: 'center' },
@@ -51,7 +51,7 @@ const styleSheet = document.createElement("style");
 styleSheet.innerText = keyframes;
 document.head.appendChild(styleSheet);
 
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - FROM YOUR FILE
 const formatCurrency = (val) => { if (val == null) return 'N/A'; if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`; if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`; return `$${val.toFixed(2)}`; };
 const formatNum = (val, dec = 2) => val != null ? val.toFixed(dec) : 'N/A';
 const formatBigNum = (val) => val != null ? Math.round(val).toLocaleString() : 'N/A';
@@ -61,85 +61,9 @@ const getVerdictStyle = (verdict = '') => { const lowerVerdict = verdict.toLower
 const getScoreBarColor = (score) => { if (score > 0.65) return 'var(--accent-color)'; if (score > 0.45) return '#E8D44D'; return '#DD6B20'; };
 
 
-// --- THE PANELS FROM THE VERSION YOU LIKED ---
-
-// MacroPanel exactly as it was in your good reference image
-const MacroPanel = ({ stock }) => {
-    const details = stock?.['Macro Details'] ?? {};
-    const score = stock?.['Macro Score'] ?? 0;
-    const sectorClassification = details.sector_classification || 'N/A';
-    const currentMacroState = details.current_macro_state || 'N/A';
-    const cycleData = [ { title: 'Expansion', types: ['Growth', 'Cyclical Growth', 'Cyclical'] }, { title: 'Peak', types: ['Defensive Growth', 'Diversified'] }, { title: 'Contraction', types: ['Defensive', 'Utilities', 'Consumer Defensive'] }, { title: 'Trough', types: ['Cyclical Value', 'Financial Services'] } ];
-    const idealCycleStage = cycleData.find(c => c.types.includes(sectorClassification))?.title || 'N/A';
-    
-    return (
-        <div style={styles.detailPanel}>
-            <div style={styles.panelHeader}><h3 style={styles.panelTitle}>Macro Environment Fit</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div>
-            <div style={styles.cycleBoxContainer}>
-                {cycleData.map(box => {
-                    const isIdealStage = box.title === idealCycleStage;
-                    // Note: 'isCurrentStage' logic was missing/simplified in bad versions, it is now restored.
-                    const isCurrentStage = box.title === currentMacroState; 
-                    const boxStyle = { ...styles.cycleBox, ...(isCurrentStage && {border:'2px solid var(--accent-color)'}), ...(isIdealStage && styles.cycleBoxActive) };
-                    return (
-                        <div key={box.title} style={boxStyle}>
-                            <span style={{...styles.cycleBoxTitle, ...(isIdealStage && styles.cycleBoxTitleActive)}}>
-                                {box.title}{isCurrentStage && !isIdealStage && <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}> (Current)</span>}
-                            </span>
-                            <ul style={styles.sectorTypeList}>
-                                {box.types.map(type => (
-                                    <li key={type} style={{...(type === sectorClassification && !isIdealStage && styles.sectorTypeHighlight), ...(isIdealStage && {color:'#0d1117'})}}>{type}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    );
-                })}
-            </div>
-            <div style={styles.detailRow}><span>Ideal Cycle Stage</span><strong>{idealCycleStage}</strong></div>
-            <div style={{...styles.detailRow, borderBottom: 'none'}}><span>Technology Sector Classification</span><strong style={{color: 'var(--accent-color)'}}>{sectorClassification}</strong></div>
-        </div>
-    );
-};
-
-// BalanceSheetPanel exactly as it was in your good reference image
-const BalanceSheetPanel = ({ stock }) => {
-    const details = stock?.['Financials Details'] ?? {};
-    const totalAssets = details.totalAssets || 0;
-    const totalDebt = details.totalDebt || 0;
-    const totalEquity = details.stockholderEquity || 0;
-    const debtPct = totalAssets > 0 ? totalDebt / totalAssets : 0;
-    const equityPct = totalAssets > 0 ? totalEquity / totalAssets : 0;
-    const chartData = [ { title: 'Equity', value: equityPct * 100, color: 'var(--accent-color)' }, { title: 'Debt', value: debtPct * 100, color: 'var(--danger-color)' } ];
-    
-    const LegendRow = ({ label, value, percentage, color }) => (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', fontSize: '0.9rem' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '3px' }}></span>
-                <span>{label}</span>
-            </div>
-            <strong style={{ color: color }}>{value} ({percentage})</strong>
-        </div>
-    );
-    
-    return (
-        <div style={styles.detailPanel}>
-            <div style={styles.panelHeader}><h3 style={styles.panelTitle}>Balance Sheet Visualization</h3></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '25px', padding: '10px 0px' }}>
-                <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
-                    <PieChart data={chartData} lineWidth={20} startAngle={-90} background="#161b22" />
-                    <div style={styles.pieChartLabel}>Assets</div>
-                </div>
-                <div style={{ flex: 1 }}>
-                     <LegendRow label="Total Assets" value={formatCurrency(totalAssets)} percentage="100%" color="var(--text-primary)" />
-                     <LegendRow label="Total Equity" value={formatCurrency(totalEquity)} percentage={formatPercent(equityPct)} color="var(--accent-color)" />
-                     <LegendRow label="Total Liabilities (Debt)" value={formatCurrency(totalDebt)} percentage={formatPercent(debtPct)} color="var(--danger-color)" />
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Other panels that have not changed
+// --- ALL PANELS ARE EXACTLY FROM YOUR PROVIDED FILE ---
+const MacroPanel = ({ stock }) => { const details = stock?.['Macro Details'] ?? {}; const score = stock?.['Macro Score'] ?? 0; const sectorClassification = details.sector_classification || 'N/A'; const currentMacroState = details.current_macro_state || 'N/A'; const cycleData = [ { title: 'Expansion', types: ['Growth', 'Cyclical Growth', 'Cyclical'] }, { title: 'Peak', types: ['Defensive Growth', 'Diversified'] }, { title: 'Contraction', types: ['Defensive', 'Utilities', 'Consumer Defensive'] }, { title: 'Trough', types: ['Cyclical Value', 'Financial Services'] } ]; const idealCycleStage = cycleData.find(c => c.types.includes(sectorClassification))?.title || 'N/A'; return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Macro Environment Fit</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><div style={styles.cycleBoxContainer}>{cycleData.map(box => { const isIdealStage = box.title === idealCycleStage; const isCurrentStage = box.title === currentMacroState; const boxStyle = { ...styles.cycleBox, ...(isCurrentStage && {border:'2px solid var(--accent-color)'}), ...(isIdealStage && styles.cycleBoxActive) }; return ( <div key={box.title} style={boxStyle}><span style={{...styles.cycleBoxTitle, ...(isIdealStage && styles.cycleBoxTitleActive)}}>{box.title}{isCurrentStage && !isIdealStage && <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}> (Current)</span>}</span><ul style={styles.sectorTypeList}>{box.types.map(type => ( <li key={type} style={{...(type === sectorClassification && !isIdealStage && styles.sectorTypeHighlight), ...(isIdealStage && {color:'#0d1117'})}}>{type}</li> ))}</ul></div> ); })}</div><div style={styles.detailRow}><span>Ideal Cycle Stage</span><strong>{idealCycleStage}</strong></div><div style={{...styles.detailRow, borderBottom: 'none'}}><span>Technology Sector Classification</span><strong style={{color: 'var(--accent-color)'}}>{sectorClassification}</strong></div></div> ); };
+const BalanceSheetPanel = ({ stock }) => { const details = stock?.['Financials Details'] ?? {}; const totalAssets = details.totalAssets || 0; const totalDebt = details.totalDebt || 0; const totalEquity = details.stockholderEquity || 0; const debtPct = totalAssets > 0 ? totalDebt / totalAssets : 0; const equityPct = totalAssets > 0 ? totalEquity / totalAssets : 0; const chartData = [ { title: 'Equity', value: equityPct * 100, color: 'var(--accent-color)' }, { title: 'Debt', value: debtPct * 100, color: 'var(--danger-color)' } ]; const LegendRow = ({ label, value, percentage, color }) => ( <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', fontSize: '0.9rem' }}><div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '3px' }}></span><span>{label}</span></div><strong style={{ color: color }}>{value} ({percentage})</strong></div> ); return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Balance Sheet Visualization</h3></div><div style={{ display: 'flex', alignItems: 'center', gap: '25px', padding: '10px 0px' }}><div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}><PieChart data={chartData} lineWidth={20} startAngle={-90} background="#161b22" /><div style={styles.pieChartLabel}>Assets</div></div><div style={{ flex: 1 }}><LegendRow label="Total Assets" value={formatCurrency(totalAssets)} percentage={formatPercent(1)} color="var(--text-primary)" /><LegendRow label="Total Equity" value={formatCurrency(totalEquity)} percentage={formatPercent(equityPct)} color="var(--accent-color)" /><LegendRow label="Total Liabilities (Debt)" value={formatCurrency(totalDebt)} percentage={formatPercent(debtPct)} color="var(--danger-color)" /></div></div></div> ); };
 const FundamentalsPanel = ({ stock }) => { const score = stock?.['Financials Score'] ?? 0; const details = stock?.['Financials Details'] ?? {}; const FundamentaMetric = ({ label, value, formatter = (v) => v }) => (<div style={styles.detailRow}><span style={{color: 'var(--text-secondary)'}}>{label}</span><strong style={{color: 'var(--text-primary)'}}>{formatter(value)}</strong></div>); return ( <div style={styles.detailPanel}><div style={styles.panelHeader}><h3 style={styles.panelTitle}>Fundamental Analysis</h3><span style={styles.panelScore}>{Math.round(score * 100)}</span></div><FundamentaMetric label="YoY Revenue Growth" value={details.revenue_growth_yoy} formatter={formatPercent} /><FundamentaMetric label="P/E Ratio" value={details.pe_ratio} formatter={formatNum} /><FundamentaMetric label="P/B Ratio" value={details.priceToBook} formatter={formatNum} /><FundamentaMetric label="Debt to Equity" value={details.de_ratio} formatter={formatNum} /><FundamentaMetric label="Return on Equity" value={details.roe} formatter={formatPercent} /><FundamentaMetric label="Profit Margin" value={details.profit_margin} formatter={formatPercent} /></div> );};
 const TechnicalsPanel = ({ stock }) => { const score = stock?.['Technicals Score'] ?? 0; const details = stock?.['Technicals Details'] ?? {}; let markerPosition = 50; if (details.fiftyTwoWeekHigh != null && details.fiftyTwoWeekLow != null && details.current_price != null) { const currentPrice = Math.max(details.fiftyTwoWeekLow, Math.min(details.fiftyTwoWeekHigh, details.current_price)); const range = details.fiftyTwoWeekHigh - details.fiftyTwoWeekLow; markerPosition = range > 0 ? ((currentPrice - details.fiftyTwoWeekLow) / range) * 100 : 50; } const macdIsBullish = details.macd_line > details.signal_line; const MetricRow = ({ label, value, color }) => ( <div style={{...styles.detailRow, padding: '10px 0', borderBottom: '1px solid #161b2280' }}> <span style={{color: 'var(--text-secondary)'}}>{label}</span> <strong style={{color: color || 'var(--text-primary)'}}>{value}</strong> </div> ); return ( <div style={styles.detailPanel}> <div style={styles.panelHeader}> <h3 style={styles.panelTitle}>Technicals</h3> <span style={styles.panelScore}>{Math.round(score * 100)}</span> </div> <div style={{ padding: '10px 0 15px 0' }}> <div style={styles.priceRangeLabels}> <span>{formatSimpleCurrency(details.fiftyTwoWeekLow)}</span> <span style={{color: 'var(--text-primary)', fontWeight: 600}}>52-Week Range</span> <span>{formatSimpleCurrency(details.fiftyTwoWeekHigh)}</span> </div> <div style={styles.priceRangeContainer}> <div style={styles.priceRangeBar}></div> <div style={{...styles.priceRangeMarker, left: `${markerPosition}%`}}></div> </div> </div> <MetricRow label="Current Price" value={formatSimpleCurrency(details.current_price)} color="var(--accent-color)" /> <MetricRow label="50-Day MA" value={formatSimpleCurrency(details.ma50)} /> <MetricRow label="200-Day MA" value={formatSimpleCurrency(details.ma200)} /> <MetricRow label="RSI (14)" value={formatNum(details.rsi, 2)} /> <MetricRow label="MACD" value={macdIsBullish ? 'Bullish' : 'Bearish'} color={macdIsBullish ? 'var(--accent-color)' : 'var(--danger-color)'} /> <MetricRow label="ATR (Volatility)" value={formatSimpleCurrency(details.atr)} /> </div> ); };
 const PriceTrendPanel = ({ stock }) => { const details = stock?.['Technicals Details'] ?? {}; const priceData = (details.price_history || []).slice(-6); const isUp = priceData.length > 1 ? priceData[priceData.length - 1][1] >= priceData[0][1] : true; const series = [{ name: 'Price', data: priceData }]; const options = { chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true } }, dataLabels: { enabled: false }, stroke: { curve: 'smooth', width: 3 }, colors: [isUp ? 'var(--accent-color)' : 'var(--danger-color)'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.1, stops: [0, 100] }}, tooltip: { theme: 'dark', style: { fontSize: '12px' }, x: { format: 'ddd, MMM dd' }, y: { formatter: (val) => `$${val.toFixed(2)}` }}, grid: { show: false }, xaxis: { type: 'datetime', labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false }}, yaxis: { labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false }}, }; return (<div style={{...styles.detailPanel, padding: '0', background: 'transparent', border: 'none'}}><Chart options={options} series={series} type="area" height={280} /></div>); };
@@ -150,36 +74,86 @@ const SeasonalityPanel = ({ stock }) => { const details = stock?.['Seasonality D
 
 // --- CORE COMPONENTS ---
 
-// THE CORRECTED LAYOUT IS HERE
-const DetailedView = ({ stock, onBack }) => (
+// **** THIS IS THE ONLY PART THAT IS DIFFERENT ****
+// It now has the logic to switch between the dashboard and a single panel on mobile
+const DetailedView = ({ stock, onBack }) => {
+  // --- NEW: State to manage which panel is shown on mobile ---
+  const [activeMobilePanel, setActiveMobilePanel] = useState(null);
+
+  // --- NEW: Data for our category grid ---
+  const panelCategories = [
+    { id: 'macro', title: 'Macro', score: Math.round((stock['Macro Score'] || 0) * 100), Component: MacroPanel },
+    { id: 'technicals', title: 'Technicals', score: Math.round((stock['Technicals Score'] || 0) * 100), Component: TechnicalsPanel },
+    { id: 'fundamentals', title: 'Fundamentals', score: Math.round((stock['Financials Score'] || 0) * 100), Component: FundamentalsPanel },
+    { id: 'balance_sheet', title: 'Balance Sheet', Component: BalanceSheetPanel },
+    { id: 'performance', title: 'Performance', Component: PerformanceAndStatsPanel },
+    { id: 'sentiment', title: 'Sentiment', score: Math.round((stock['Sentiment LLM Score'] || 0) * 100), Component: SentimentPanel },
+    { id: 'seasonality', title: 'Seasonality', Component: SeasonalityPanel },
+  ];
+
+  // A little helper to find the component to render when a button is clicked
+  const ActiveComponent = panelCategories.find(p => p.id === activeMobilePanel)?.Component;
+
+  return (
     <div style={styles.container}>
-        <button onClick={onBack} style={styles.backButton}>← Back to Results</button>
-        <div style={{...styles.cardHeader, width: '100%', alignItems: 'center'}}>
-            <h1 style={styles.tickerSymbol}>{stock.Ticker} Full Breakdown</h1>
-            <div style={{display: 'flex', alignItems: 'baseline'}}>
-                <span style={styles.growthScore}>Growth Score: {formatPercent(stock['Growth Score'], 2)}</span>
-                {stock['Momentum Details']?.bonus > 0 && (
-                    <span style={styles.momentumBadge} title={stock['Momentum Details'].reason}> Momentum Bonus </span>
-                )}
-                <span style={{...styles.verdictBadge, ...getVerdictStyle(stock['Final Verdict'])}}>{stock['Final Verdict']}</span>
-            </div>
+      {/* Universal header for both mobile and desktop */}
+      <div className="detailed-view-header">
+        <button onClick={onBack} style={{...styles.backButton, marginBottom: '20px'}}>← Back to All Results</button>
+        <h1 style={{...styles.tickerSymbol, fontSize: '2rem', textAlign: 'center'}}>{stock.Ticker} Full Breakdown</h1>
+        <div className="header-badges">
+          <span style={styles.growthScore}>Growth Score: {formatPercent(stock['Growth Score'], 2)}</span>
+          {stock['Momentum Details']?.bonus > 0 && <span style={styles.momentumBadge} title={stock['Momentum Details']?.reason}>Momentum Bonus</span>}
+          <span style={{...styles.verdictBadge, ...getVerdictStyle(stock['Final Verdict'])}}>{stock['Final Verdict']}</span>
         </div>
-        <div className="detailed-grid">
-            <div className="left-column">
-                <MacroPanel stock={stock} />
-                <BalanceSheetPanel stock={stock} /> 
-                <FundamentalsPanel stock={stock} />
-                <SentimentPanel stock={stock} />
-            </div>
-            <div className="right-column">
-                <PriceTrendPanel stock={stock} />
-                <TechnicalsPanel stock={stock} />
-                <PerformanceAndStatsPanel stock={stock} />
-                <SeasonalityPanel stock={stock} />
-            </div>
+      </div>
+
+      {/* --- DESKTOP VIEW (The one you're used to) --- */}
+      <div className="detailed-grid desktop-only">
+        <div className="left-column">
+          <MacroPanel stock={stock} />
+          <BalanceSheetPanel stock={stock} />
+          <FundamentalsPanel stock={stock} />
+          <SentimentPanel stock={stock} />
         </div>
+        <div className="right-column">
+          <PriceTrendPanel stock={stock} />
+          <TechnicalsPanel stock={stock} />
+          <PerformanceAndStatsPanel stock={stock} />
+          <SeasonalityPanel stock={stock} />
+        </div>
+      </div>
+      
+      {/* --- NEW MOBILE-ONLY VIEW --- */}
+      <div className="mobile-only">
+        {
+          !activeMobilePanel ? (
+            // If no panel is active, show the grid of buttons
+            <div className="category-grid">
+              {panelCategories.map(panel => (
+                <button key={panel.id} className="category-button" onClick={() => setActiveMobilePanel(panel.id)}>
+                  <span className="category-button-title">{panel.title}</span>
+                  {panel.score != null && (
+                    <span className="category-button-score" style={{ color: getScoreBarColor(panel.score / 100) }}>
+                      {panel.score}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          ) : (
+            // If a panel IS active, show the back button and that single panel
+            <div className="mobile-panel-view">
+              <button onClick={() => setActiveMobilePanel(null)} className="mobile-back-button">
+                ← Back to Overview
+              </button>
+              <ActiveComponent stock={stock} />
+            </div>
+          )
+        }
+      </div>
     </div>
-);
+  );
+};
 
 const ResultCard = ({ data, onSelect }) => { const sentimentScore = ((data['Sentiment LLM Score'] || 0) + (data['Sentiment Analyst Score'] || 0) + (data['Sentiment Social Score'] || 0)) / 3; const scores = [ { label: 'Financials', value: data['Financials Score'] || 0 }, { label: 'Technicals', value: data['Technicals Score'] || 0 }, { label: 'Sentiment', value: sentimentScore }, { label: 'Macro', value: data['Macro Score'] || 0 } ]; const finalVerdict = data['Final Verdict'] || 'Neutral'; const seasonalityVerdict = data['Seasonality Details']?.verdict || 'Neutral'; const momentumBonus = data['Momentum Details']?.bonus > 0; return ( <div style={styles.card} onClick={() => onSelect(data)}> <div style={styles.cardHeader}> <span style={styles.tickerSymbol}>{data.Ticker}</span> <span style={styles.growthScore}>{formatPercent(data['Growth Score'], 2)}</span> </div> <div style={styles.verdictPillsContainer}> <div style={{...styles.verdictPill, ...getVerdictStyle(finalVerdict)}}>{finalVerdict}</div> <div style={{...styles.verdictPill, ...getVerdictStyle(seasonalityVerdict)}}>{`Seasonality: ${seasonalityVerdict}`}</div> {momentumBonus && <div style={{...styles.verdictPill, ...styles.momentumPill}}>Momentum</div>} </div> {scores.map(s => ( <div key={s.label} style={styles.scoreRow}> <span style={styles.scoreLabel}>{s.label}</span> <div style={styles.scoreBarContainer}> <div style={{...styles.scoreBarFill, width: `${s.value * 100}%`, backgroundColor: getScoreBarColor(s.value) }}></div> </div> <span style={styles.scoreValue}>{formatPercent(s.value, 2)}</span> </div> ))} </div> );};
 const MainView = ({ onAnalyze, onTickersChange, tickers, loading, error, results, onSelectStock }) => ( <> <h1 style={styles.header}>AI Powered Pocket Analyst</h1> <div style={styles.inputPanel}> <form onSubmit={onAnalyze} style={styles.form}> <input type="text" value={tickers} onChange={onTickersChange} placeholder="e.g., NVDA, MSFT, AAPL" style={styles.input} /> <button type="submit" style={styles.button} disabled={loading}>Analyze</button> </form> </div> {loading && <div style={styles.loader}></div>} {error && <div>{error}</div>} {results.length > 0 && <div style={styles.resultsContainer}>{results.map(result => (<ResultCard key={result.Ticker} data={result} onSelect={onSelectStock} />))}</div>} </> );
