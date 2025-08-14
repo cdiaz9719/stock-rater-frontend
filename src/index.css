@@ -1,4 +1,4 @@
-/* src/index.css - FINAL VERSION with mobile dashboard */
+/* src/index.css - FINAL POLISHED VERSION */
 
 :root {
   --background-color: #0D1117; 
@@ -12,25 +12,30 @@
   --success-color: #2EFEB4;
 }
 
-body, html, #root { 
+body, html { 
   margin: 0; 
   padding: 0; 
-  width: 100%; 
-  min-height: 100%; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--background-color);
   color: var(--text-primary);
+}
+
+/* FIX: Ensure no element can break the viewport width */
+body, #root {
+  width: 100%;
+  overflow-x: hidden; /* This prevents horizontal scrolling */
+  box-sizing: border-box;
 }
 
 #root { 
   display: flex; 
   flex-direction: column; 
   align-items: center; 
-  padding: 20px 15px 40px 15px;
-  box-sizing: border-box;
+  padding: 20px 15px 40px 15px; /* Default mobile padding */
+  max-width: 100%; /* Important for overflow fix */
 }
 
-/* Base layout defaults to a single column */
+/* --- MOBILE-FIRST BASE STYLES --- */
 .resultsContainer,
 .detailed-grid,
 .performance-outlook-grid {
@@ -40,79 +45,23 @@ body, html, #root {
     width: 100%;
 }
 
-.left-column, 
-.right-column { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 20px;
-}
+.left-column, .right-column { display: flex; flex-direction: column; gap: 20px;}
 
-/* Tab container styles for mobile */
-.tab-container {
-  width: 100%;
-  display: flex;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 20px;
-  overflow-x: auto; 
-}
+.tab-container { width: 100%; display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; overflow-x: auto; }
+.tab-button { padding: 12px 20px; cursor: pointer; background-color: transparent; border: none; color: var(--text-secondary); font-weight: 600; font-size: 0.95rem; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; white-space: nowrap; }
+.tab-button-active { padding: 12px 20px; cursor: pointer; background-color: transparent; border: none; font-weight: 600; font-size: 0.95rem; color: var(--accent-color); border-bottom: 3px solid var(--accent-color); white-space: nowrap; }
 
-.tab-button {
-  padding: 12px 20px;
-  cursor: pointer;
-  background-color: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.95rem;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease-in-out;
-  white-space: nowrap;
-}
+/* --- POLISHED MOBILE DASHBOARD --- */
+.detailed-view-header { width: 100%; text-align: center; margin-bottom: 25px; }
+.header-badges { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.header-badges > span { font-size: 0.9rem; } /* Make header badges smaller on mobile */
+h1 { font-size: 1.75rem; } /* Control the main breakdown title size */
 
-.tab-button-active {
-  padding: 12px 20px;
-  cursor: pointer;
-  background-color: transparent;
-  border: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--accent-color);
-  border-bottom: 3px solid var(--accent-color);
-  white-space: nowrap;
-}
-
-
-/* --- DETAILED VIEW MOBILE DASHBOARD STYLES --- */
-
-.detailed-view-header {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.header-badges {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-/* Logic to hide/show layouts */
-@media (max-width: 768px) {
-  .desktop-only { display: none; }
-}
-
-@media (min-width: 769px) {
-  .mobile-only { display: none; }
-}
-
-/* Styles for the new category grid on mobile */
+/* The grid itself, now with better spacing */
 .category-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px; /* Tighter gap */
   width: 100%;
   margin-top: 20px;
 }
@@ -120,76 +69,58 @@ body, html, #root {
 .category-button {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  height: 120px;
+  justify-content: space-between; /* Better vertical alignment */
+  align-items: flex-start; /* Align text to the left for a cleaner look */
+  padding: 15px; /* Use padding for inner spacing */
+  height: 110px; /* Consistent height */
   background-color: var(--panel-background);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   color: var(--text-primary);
-  font-size: 1.1rem;
-  font-weight: 600;
-  text-align: center;
+  text-align: left; /* Cleaner than center */
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s;
 }
 
 .category-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px); /* Less dramatic hover effect */
+}
+
+/* Polished text inside the buttons */
+.category-button-title {
+  font-size: 1.0rem;
+  font-weight: 600;
 }
 
 .category-button-score {
-  font-size: 1.8rem;
+  font-size: 1.5rem; /* Slightly smaller score for better balance */
   font-weight: 700;
+  align-self: flex-end; /* Push score to the bottom right */
 }
 
-.mobile-panel-view {
-  width: 100%;
-}
-
-.mobile-back-button {
-  background: none;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-weight: 600;
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  width: 100%;
-  display: block; /* Make it a block to take up full width */
-  text-align: center;
-}
+/* Styles for the "active panel" view */
+.mobile-panel-view { width: 100%; }
+.mobile-back-button { background: none; border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; display: block; text-align: center; box-sizing: border-box; }
 
 
-/* --- DESKTOP & TABLET OVERRIDE STYLES --- */
-/* This rule applies ONLY if the screen is 768px WIDE OR WIDER */
+/* --- LOGIC TO HIDE/SHOW LAYOUTS --- */
+.mobile-only { display: block; width: 100%; }
+.desktop-only { display: none; }
 
-@media (min-width: 768px) {
+
+/* --- DESKTOP & TABLET OVERRIDES (min-width: 769px) --- */
+@media (min-width: 769px) {
   
-  #root {
-    padding: 40px; /* Restore original larger padding for desktop */
-  }
-
-  /* Override grids to use multi-column layouts */
-  .detailed-grid {
-    grid-template-columns: 2fr 1fr;
-  }
+  /* On desktop, show the desktop grid and hide the mobile one */
+  .mobile-only { display: none; }
+  .desktop-only { display: grid; }
   
-  .resultsContainer {
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  }
+  #root { padding: 40px; }
+  h1 { font-size: 2.5rem; }
 
-  .performance-outlook-grid {
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  }
+  .detailed-grid { grid-template-columns: 2fr 1fr; }
+  .resultsContainer { grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); }
+  .performance-outlook-grid { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
   
-  /* Restore tab button styles for desktop */
-  .tab-button, .tab-button-active {
-    padding: 12px 25px;
-    font-size: 1rem;
-  }
-
+  .tab-button, .tab-button-active { padding: 12px 25px; font-size: 1rem; }
 }
