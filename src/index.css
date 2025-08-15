@@ -1,4 +1,4 @@
-/* src/index.css - DEFINITIVE FIX for Desktop Layout & Mobile Polish */
+/* src/index.css - FINAL VERSION to support both UIs */
 
 :root {
   --background-color: #0D1117; 
@@ -24,57 +24,90 @@ body {
   background-color: var(--background-color);
   color: var(--text-primary);
   width: 100vw;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Hard stop for horizontal scroll */
 }
 
-/* --- GLOBAL CONTAINER STYLES --- */
-#root {
+/* This is the class that styles the original 2-column grid. */
+/* It is NOT inside a media query, it's a general utility. */
+.detailed-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
   width: 100%;
-  padding: 20px;
+}
+.left-column, .right-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 20px;
 }
 
-.main-view-container, .inputPanel, .resultsContainer, .detailed-view-container {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-}
+/* Style for 52-week price range elements which are inside desktop version */
+.priceRangeContainer { position: relative; width: 100%; padding: 10px 0 0 0; }
+.priceRangeBar { width: 100%; height: 8px; background: linear-gradient(90deg, #F85149, #DD6B20, #2EFEB4, #38A169); border-radius: 4px; }
+.priceRangeMarker { position: absolute; top: 50%; transform: translateY(-50%) translateX(-50%); width: 16px; height: 16px; background-color: var(--accent-color); border-radius: 50%; border: 2px solid #0D1117; }
+.priceRangeLabels { display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.8rem; }
 
-.inputPanel { max-width: 600px; }
-.resultsContainer { max-width: 1000px; display: grid; gap: 20px; grid-template-columns: 1fr; }
-
-/* Main page result card polish */
-.result-card:hover {
-  border-color: var(--accent-color);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(46, 254, 180, 0.1);
-}
-
-.form { display: flex; flex-direction: column; gap: 15px; width: 100%; }
-.scoreRow { grid-template-columns: 80px 1fr 50px; gap: 8px; font-size: 0.9rem; }
-.verdictPillsContainer { gap: 8px; margin-bottom: 20px; }
-.verdictPill { font-size: 0.8rem; padding: 3px 10px; }
-h1 { font-size: 2rem; text-align: center; line-height: 1.2; }
-
-/* --- DETAILED VIEW STYLES --- */
-.detailed-view-header { width: 100%; text-align: center; margin-bottom: 25px; }
-.header-badges { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
-.header-badges > span { font-size: 0.9rem; padding: 4px 12px; }
 
 /*
-  THE CRITICAL LAYOUT FIX:
-  We default to showing BOTH, then use media queries to hide one.
-  This is the most robust way.
+  CRITICAL FIX FOR MOBILE vs DESKTOP
+  - Start by hiding the desktop view on ALL screen sizes.
+  - The .mobile-only styles will apply by default.
+  - THEN, we use a media query to flip this for larger screens.
 */
-.mobile-only { display: block; width: 100%; }
-.desktop-only { display: none; width: 100%; } /* Desktop is HIDDEN by default */
+.desktop-only {
+  display: none;
+}
+.mobile-only {
+  width: 100%;
+  padding: 0 15px; /* Add some side padding for the mobile dashboard */
+}
 
-/* MOBILE DASHBOARD STYLES */
-.category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; padding: 10px 0; }
-.category-button, .category-button-full { display: flex; flex-direction: column; justify-content: space-between; padding: 15px; min-height: 130px; background: var(--panel-background); border: 1px solid var(--border-color); border-radius: 16px; cursor: pointer; text-align: left; transition: all 0.2s ease-out; color: var(--text-primary); position: relative; }
-.category-button::before, .category-button-full::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; padding: 2px; background: linear-gradient(135deg, var(--category-color), transparent); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.3; transition: opacity 0.2s ease-out; }
+
+/* STYLES FOR THE CREATIVE MOBILE DASHBOARD */
+.detailed-view-header {
+  width: 100%;
+  padding: 0 15px; /* Add padding for header content too */
+  text-align: center;
+  margin-bottom: 25px;
+}
+.header-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+  padding: 10px 0;
+}
+.category-button, .category-button-full {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 15px;
+  min-height: 130px;
+  background: var(--panel-background);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease-out;
+  color: var(--text-primary);
+  position: relative;
+}
+.category-button::before, .category-button-full::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; padding: 2px;
+  background: linear-gradient(135deg, var(--category-color), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.3; transition: opacity 0.2s ease-out;
+}
 .category-button:hover, .category-button-full:hover { transform: translateY(-5px); border-color: var(--category-color); }
 .category-button:hover::before, .category-button-full:hover::before { opacity: 1; }
 .category-button-full { grid-column: 1 / -1; }
@@ -85,27 +118,22 @@ h1 { font-size: 2rem; text-align: center; line-height: 1.2; }
 .mobile-panel-view { width: 100%; }
 .mobile-back-button { background: none; border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; display: block; text-align: center; }
 
-/* --- DESKTOP & TABLET OVERRIDES (The magic is here) --- */
+
+/* --- DESKTOP OVERRIDES --- */
+/* If the screen is wide enough, FLIP the visibility and apply desktop styles */
 @media (min-width: 769px) {
   
-  /* FLIP THE VISIBILITY: Hide mobile, show desktop */
-  .mobile-only { display: none; }
-  .desktop-only { display: block; }
-  
-  #root { padding: 40px; }
-  h1 { font-size: 2.5rem; }
-
-  /* Restore desktop form and grid layouts */
-  .form { flex-direction: row; }
-  .detailed-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
+  /* FLIP: Hide mobile, show desktop */
+  .mobile-only {
+    display: none;
+  }
+  .desktop-only {
+    display: block; /* The block is a simple div, which lets the .detailed-grid inside it control the layout */
     width: 100%;
-    max-width: 1200px; /* This is crucial for desktop */
   }
-  .resultsContainer {
-      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  }
+
+  /* Restore original main page layout */
+  .form { flex-direction: row; }
+  .resultsContainer { grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); }
   .scoreRow { grid-template-columns: 100px 1fr 60px; font-size: 0.9rem; }
 }
