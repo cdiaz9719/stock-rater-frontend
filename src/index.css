@@ -1,4 +1,4 @@
-/* src/index.css - LEVEL UP - FINAL CREATIVE VERSION */
+/* src/index.css - DEFINITIVE FIX for Desktop Layout & Mobile Polish */
 
 :root {
   --background-color: #0D1117; 
@@ -24,139 +24,88 @@ body {
   background-color: var(--background-color);
   color: var(--text-primary);
   width: 100vw;
-  overflow-x: hidden; /* Hard stop for horizontal scroll */
+  overflow-x: hidden;
 }
 
-/* MAIN CONTAINERS */
-#root, .main-view-container {
+/* --- GLOBAL CONTAINER STYLES --- */
+#root {
   width: 100%;
-  max-width: 1200px;
   padding: 20px;
-}
-.main-view-container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* FORM STYLING (Mobile first) */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
+.main-view-container, .inputPanel, .resultsContainer, .detailed-view-container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* MAIN PAGE RESULT CARD (Mobile first) */
-.resultsContainer {
-  width: 100%;
-  max-width: 1000px;
-}
+.inputPanel { max-width: 600px; }
+.resultsContainer { max-width: 1000px; display: grid; gap: 20px; grid-template-columns: 1fr; }
+
+/* Main page result card polish */
 .result-card:hover {
   border-color: var(--accent-color);
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(46, 254, 180, 0.1);
 }
+
+.form { display: flex; flex-direction: column; gap: 15px; width: 100%; }
 .scoreRow { grid-template-columns: 80px 1fr 50px; gap: 8px; font-size: 0.9rem; }
 .verdictPillsContainer { gap: 8px; margin-bottom: 20px; }
 .verdictPill { font-size: 0.8rem; padding: 3px 10px; }
 h1 { font-size: 2rem; text-align: center; line-height: 1.2; }
 
-/* DETAILED VIEW HEADER */
+/* --- DETAILED VIEW STYLES --- */
 .detailed-view-header { width: 100%; text-align: center; margin-bottom: 25px; }
 .header-badges { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
 .header-badges > span { font-size: 0.9rem; padding: 4px 12px; }
 
-/* NEW MOBILE DASHBOARD GRID */
-.category-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  width: 100%;
-  padding: 10px 0;
-}
-.category-button, .category-button-full {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 15px;
-  min-height: 130px;
-  background: var(--panel-background);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease-out;
-  color: var(--text-primary);
-  position: relative; /* For pseudo-elements */
-}
-.category-button::before, .category-button-full::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border-radius: 16px;
-  padding: 2px;
-  background: linear-gradient(135deg, var(--category-color), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0.3;
-  transition: opacity 0.2s ease-out;
-}
-.category-button:hover, .category-button-full:hover {
-  transform: translateY(-5px);
-  border-color: var(--category-color);
-}
-.category-button:hover::before, .category-button-full:hover::before {
-  opacity: 1;
-}
+/*
+  THE CRITICAL LAYOUT FIX:
+  We default to showing BOTH, then use media queries to hide one.
+  This is the most robust way.
+*/
+.mobile-only { display: block; width: 100%; }
+.desktop-only { display: none; width: 100%; } /* Desktop is HIDDEN by default */
 
-.category-button-full {
-  grid-column: 1 / -1; /* Make this span the full width */
-}
-.category-button-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.category-button-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--category-color);
-}
+/* MOBILE DASHBOARD STYLES */
+.category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; padding: 10px 0; }
+.category-button, .category-button-full { display: flex; flex-direction: column; justify-content: space-between; padding: 15px; min-height: 130px; background: var(--panel-background); border: 1px solid var(--border-color); border-radius: 16px; cursor: pointer; text-align: left; transition: all 0.2s ease-out; color: var(--text-primary); position: relative; }
+.category-button::before, .category-button-full::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; padding: 2px; background: linear-gradient(135deg, var(--category-color), transparent); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.3; transition: opacity 0.2s ease-out; }
+.category-button:hover, .category-button-full:hover { transform: translateY(-5px); border-color: var(--category-color); }
+.category-button:hover::before, .category-button-full:hover::before { opacity: 1; }
+.category-button-full { grid-column: 1 / -1; }
+.category-button-header { display: flex; align-items: center; gap: 10px; }
+.category-button-icon { width: 24px; height: 24px; color: var(--category-color); }
 .category-button-title { font-size: 1.1rem; font-weight: 600; }
-.category-button-score {
-  font-size: 2rem;
-  font-weight: 700;
-  align-self: flex-end;
-  color: #fff;
-  text-shadow: 0 0 10px var(--category-color);
-}
-
+.category-button-score { font-size: 2rem; font-weight: 700; align-self: flex-end; color: #fff; text-shadow: 0 0 10px var(--category-color); }
 .mobile-panel-view { width: 100%; }
 .mobile-back-button { background: none; border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; display: block; text-align: center; }
 
-/* Show/Hide Logic */
-.mobile-only { display: block; width: 100%; }
-.desktop-only { display: none; }
-
-
-/* --- DESKTOP & TABLET OVERRIDES (min-width: 769px) --- */
+/* --- DESKTOP & TABLET OVERRIDES (The magic is here) --- */
 @media (min-width: 769px) {
-  #root { padding: 40px; }
-  .mobile-only { display: none; }
-  .desktop-only { display: block; width: 100%; }
   
+  /* FLIP THE VISIBILITY: Hide mobile, show desktop */
+  .mobile-only { display: none; }
+  .desktop-only { display: block; }
+  
+  #root { padding: 40px; }
   h1 { font-size: 2.5rem; }
 
-  /* Restore desktop layouts */
+  /* Restore desktop form and grid layouts */
   .form { flex-direction: row; }
   .detailed-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
     width: 100%;
+    max-width: 1200px; /* This is crucial for desktop */
   }
-  .resultsContainer { grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); }
+  .resultsContainer {
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  }
   .scoreRow { grid-template-columns: 100px 1fr 60px; font-size: 0.9rem; }
 }
