@@ -1,4 +1,4 @@
-kimport { useState } from 'react';
+import { useState } from 'react';
 import './index.css';
 import { PieChart } from 'react-minimal-pie-chart';
 import Chart from 'react-apexcharts';
