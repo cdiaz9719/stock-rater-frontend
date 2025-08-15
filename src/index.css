@@ -1,4 +1,4 @@
-/* src/index.css - DEFINITIVE FIX for Layout & Blank Screen */
+/* src/index.css - DEFINITIVE FIX for Desktop Layout & Mobile Polish */
 
 :root {
   --background-color: #0D1117; 
@@ -11,19 +11,24 @@
 }
 
 /* UNIVERSAL RESET & FONT */
-html { box-sizing: border-box; }
-*, *:before, *:after { box-sizing: inherit; }
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
 body {
-  margin: 0; padding: 0;
-  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--background-color);
   color: var(--text-primary);
   width: 100vw;
   overflow-x: hidden;
 }
 
-/* --- MAIN PAGE & GLOBAL CONTAINER STYLES --- */
-#root, .main-view-container {
+/* --- GLOBAL CONTAINER STYLES --- */
+#root {
   width: 100%;
   padding: 20px;
   display: flex;
@@ -31,18 +36,16 @@ body {
   align-items: center;
 }
 
-.inputPanel, .resultsContainer {
+.main-view-container, .inputPanel, .resultsContainer, .detailed-view-container {
     width: 100%;
-    max-width: 600px; /* Max-width for input */
     margin-left: auto;
     margin-right: auto;
 }
-.resultsContainer {
-    max-width: 1000px; /* Wider for results cards */
-    display: grid;
-    grid-template-columns: 1fr; /* Default to single column for mobile */
-    gap: 20px;
-}
+
+.inputPanel { max-width: 600px; }
+.resultsContainer { max-width: 1000px; display: grid; gap: 20px; grid-template-columns: 1fr; }
+
+/* Main page result card polish */
 .result-card:hover {
   border-color: var(--accent-color);
   transform: translateY(-5px);
@@ -61,34 +64,14 @@ h1 { font-size: 2rem; text-align: center; line-height: 1.2; }
 .header-badges > span { font-size: 0.9rem; padding: 4px 12px; }
 
 /*
-  THE CRITICAL FIX IS HERE:
-  We only use media queries to decide which layout to show.
-  No more default `display: none`.
+  THE CRITICAL LAYOUT FIX:
+  We default to showing BOTH, then use media queries to hide one.
+  This is the most robust way.
 */
 .mobile-only { display: block; width: 100%; }
-.desktop-only { display: none; } /* Start with desktop hidden */
+.desktop-only { display: none; width: 100%; } /* Desktop is HIDDEN by default */
 
-@media (min-width: 769px) {
-  .mobile-only { display: none; } /* Hide mobile on large screens */
-  .desktop-only { display: block; width: 100%; } /* Show desktop on large screens */
-  
-  #root { padding: 40px; }
-  h1 { font-size: 2.5rem; }
-
-  /* Restore desktop layouts */
-  .form { flex-direction: row; }
-  .detailed-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-  }
-  .resultsContainer { grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); }
-  .scoreRow { grid-template-columns: 100px 1fr 60px; font-size: 0.9rem; }
-}
-
-/* MOBILE DASHBOARD GRID STYLES */
+/* MOBILE DASHBOARD STYLES */
 .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; padding: 10px 0; }
 .category-button, .category-button-full { display: flex; flex-direction: column; justify-content: space-between; padding: 15px; min-height: 130px; background: var(--panel-background); border: 1px solid var(--border-color); border-radius: 16px; cursor: pointer; text-align: left; transition: all 0.2s ease-out; color: var(--text-primary); position: relative; }
 .category-button::before, .category-button-full::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; padding: 2px; background: linear-gradient(135deg, var(--category-color), transparent); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.3; transition: opacity 0.2s ease-out; }
@@ -101,3 +84,28 @@ h1 { font-size: 2rem; text-align: center; line-height: 1.2; }
 .category-button-score { font-size: 2rem; font-weight: 700; align-self: flex-end; color: #fff; text-shadow: 0 0 10px var(--category-color); }
 .mobile-panel-view { width: 100%; }
 .mobile-back-button { background: none; border: 1px solid var(--border-color); color: var(--text-secondary); font-weight: 600; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; display: block; text-align: center; }
+
+/* --- DESKTOP & TABLET OVERRIDES (The magic is here) --- */
+@media (min-width: 769px) {
+  
+  /* FLIP THE VISIBILITY: Hide mobile, show desktop */
+  .mobile-only { display: none; }
+  .desktop-only { display: block; }
+  
+  #root { padding: 40px; }
+  h1 { font-size: 2.5rem; }
+
+  /* Restore desktop form and grid layouts */
+  .form { flex-direction: row; }
+  .detailed-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px; /* This is crucial for desktop */
+  }
+  .resultsContainer {
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  }
+  .scoreRow { grid-template-columns: 100px 1fr 60px; font-size: 0.9rem; }
+}
